@@ -8,65 +8,149 @@
     <style>
         :root { --red: #ff3b30; --green: #34c759; --bg: #000; --card: #1c1c1e; --text: #ffffff; }
         body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Assistant', sans-serif; overflow-x: hidden; }
-        
         .page { display: none; padding: 20px; animation: fadeIn 0.4s ease; }
         .active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* לוגו וממשק עליון */
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .logo { font-family: 'Orbitron'; color: var(--red); font-size: 22px; letter-spacing: 1px; }
-
-        /* כפתור כניסה וספלאש */
+        .logo { font-family: 'Orbitron'; color: var(--red); font-size: 22px; }
         #bootScreen { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .enter-btn { background: var(--red); color: white; border: none; padding: 15px 40px; border-radius: 30px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 0 20px rgba(255, 59, 48, 0.4); }
-
-        /* העיגול המרכזי */
-        .orb { width: 180px; height: 180px; border-radius: 50%; border: 4px solid var(--green); margin: 30px auto; display: flex; align-items: center; justify-content: center; font-family: 'Orbitron'; font-size: 24px; transition: 0.5s; box-shadow: 0 0 20px rgba(52, 199, 89, 0.2); }
+        .enter-btn { background: var(--red); color: white; border: none; padding: 15px 40px; border-radius: 30px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .orb { width: 180px; height: 180px; border-radius: 50%; border: 4px solid var(--green); margin: 30px auto; display: flex; align-items: center; justify-content: center; font-family: 'Orbitron'; font-size: 24px; transition: 0.5s; }
         .orb.alert { border-color: var(--red); box-shadow: 0 0 40px var(--red); color: var(--red); }
-
-        /* אזור חיפוש */
         .search-container { background: var(--card); border-radius: 15px; display: flex; padding: 5px 15px; margin: 20px 0; border: 1px solid #333; }
-        input { flex: 1; background: transparent; border: none; color: white; padding: 12px; outline: none; font-size: 16px; font-family: 'Assistant'; }
+        input { flex: 1; background: transparent; border: none; color: white; padding: 12px; outline: none; font-family: 'Assistant'; }
         .add-btn { color: var(--green); font-size: 30px; background: none; border: none; cursor: pointer; }
-
-        /* רשימת ערים */
-        .city-card { background: var(--card); padding: 20px; border-radius: 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; cursor: pointer; transition: 0.2s; }
-        .city-card:active { transform: scale(0.97); }
-
-        /* פיד התראות */
+        .city-card { background: var(--card); padding: 20px; border-radius: 18px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; }
         .history-feed { background: var(--card); border-radius: 18px; padding: 15px; max-height: 280px; overflow-y: auto; border: 1px solid #333; }
         .feed-item { padding: 12px 0; border-bottom: 1px solid #2c2c2e; display: flex; justify-content: space-between; font-size: 14px; }
-        .feed-item:last-child { border: none; }
-
-        /* הנחיות בתוך עיר */
-        .guidelines-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 20px 0; }
-        .guide-box { background: #2c2c2e; padding: 15px 5px; border-radius: 12px; text-align: center; }
-        .guide-box b { display: block; font-size: 10px; opacity: 0.6; margin-bottom: 5px; }
-        .guide-box span { font-size: 12px; font-weight: bold; color: var(--green); }
-
-        .footer { text-align: center; opacity: 0.4; font-size: 11px; margin-top: 40px; padding-bottom: 20px; }
+        .footer { text-align: center; opacity: 0.4; font-size: 11px; margin-top: 40px; }
     </style>
 </head>
 <body>
 
     <div id="bootScreen">
-        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Home_Front_Command_Logo.svg/1200px-Home_Front_Command_Logo.svg.png" width="80" style="margin-bottom: 20px;">
         <h1 style="font-family:'Orbitron';">REDALERT OS</h1>
-        <p style="opacity:0.6;">מערכת ניטור ובקרה | דניאל כרייף</p>
         <button class="enter-btn" onclick="enterApp()">כניסה למערכת</button>
     </div>
 
     <div id="mainPage" class="page">
         <div class="header">
             <div class="logo">REDALERT OS</div>
-            <div id="liveClock" style="font-weight:bold; opacity:0.8;"></div>
+            <div id="liveClock"></div>
         </div>
-
         <div class="orb" id="statusOrb">שגרה</div>
-
         <div class="search-container">
-            <input type="text" id="cityInput" placeholder="חפש יישוב (למשל: בת ים)...">
+            <input type="text" id="cityInput" placeholder="חפש יישוב למעקב...">
+            <button class="add-btn" onclick="addCity()">+</button>
+        </div>
+        <div id="myCitiesList"></div>
+        <h3>התראות אמת ארציות:</h3>
+        <div id="globalFeed" class="history-feed">טוען נתונים...</div>
+        <div class="footer">מפתח: דניאל כרייף</div>
+    </div>
+
+    <div id="cityDetailsPage" class="page">
+        <div onclick="showPage('mainPage')" style="color:var(--green); cursor:pointer; margin-bottom:20px;">⬅️ חזרה</div>
+        <h1 id="detCityName"></h1>
+        <div id="cityHistoryFeed" class="history-feed"></div>
+        <button onclick="removeCity()" style="width:100%; background:none; border:1px solid #444; color:var(--red); padding:15px; border-radius:12px; margin-top:20px; cursor:pointer;">הסר יישוב</button>
+    </div>
+
+<script>
+    let myCities = JSON.parse(localStorage.getItem('dan_final_db')) || [];
+    let currentCityName = "";
+
+    function enterApp() {
+        document.getElementById('bootScreen').style.display = 'none';
+        showPage('mainPage');
+        syncData();
+    }
+
+    async function syncData() {
+        const feed = document.getElementById('globalFeed');
+        try {
+            // החלפה ל-Proxy יציב יותר (thingproxy) כדי להימנע משגיאות 500
+            const target = 'https://www.oref.org.il/WarningMessages/History/AlertsHistory.json';
+            const url = `https://thingproxy.freeboard.io/fetch/${target}?t=${Date.now()}`;
+            
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Proxy Error');
+            
+            const data = await response.json();
+
+            if (data && Array.isArray(data)) {
+                feed.innerHTML = data.slice(0, 20).map(a => `
+                    <div class="feed-item">
+                        <span>${a.alertDate.split(' ')[1]}</span>
+                        <b>${a.data}</b>
+                    </div>
+                `).join('');
+
+                myCities.forEach(city => {
+                    city.alerts = data.filter(item => item.data.includes(city.name));
+                });
+                renderCityCards();
+            }
+        } catch (e) {
+            console.log("סנכרון נתונים..."); // שומר על ה-log שביקשת
+        }
+    }
+
+    function addCity() {
+        const input = document.getElementById('cityInput');
+        const name = input.value.trim();
+        if (name && !myCities.find(c => c.name === name)) {
+            myCities.push({ name: name, alerts: [] });
+            save();
+            renderCityCards();
+        }
+        input.value = "";
+    }
+
+    function renderCityCards() {
+        const list = document.getElementById('myCitiesList');
+        list.innerHTML = myCities.map(c => `
+            <div class="city-card" onclick="openDetails('${c.name}')">
+                <strong>${c.name}</strong>
+                <span style="color:${c.alerts.length > 0 ? 'var(--red)' : 'var(--green)'};">
+                    ${c.alerts.length > 0 ? c.alerts.length + ' התראות' : 'שגרה'}
+                </span>
+            </div>
+        `).join('');
+    }
+
+    function openDetails(name) {
+        currentCityName = name;
+        const city = myCities.find(c => c.name === name);
+        document.getElementById('detCityName').innerText = name;
+        document.getElementById('cityHistoryFeed').innerHTML = city.alerts.map(a => `
+            <div class="feed-item"><span>${a.alertDate}</span><b>${a.title}</b></div>
+        `).join('') || "אין התראות";
+        showPage('cityDetailsPage');
+    }
+
+    function removeCity() {
+        myCities = myCities.filter(c => c.name !== currentCityName);
+        save();
+        renderCityCards();
+        showPage('mainPage');
+    }
+
+    function save() { localStorage.setItem('dan_final_db', JSON.stringify(myCities)); }
+    function showPage(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+    function updateClock() {
+        document.getElementById('liveClock').innerText = new Date().toLocaleTimeString('he-IL', { hour12: false });
+    }
+
+    setInterval(syncData, 5000);
+    setInterval(updateClock, 1000);
+    updateClock();
+</script>
+</body>
+</html>            <input type="text" id="cityInput" placeholder="חפש יישוב (למשל: בת ים)...">
             <button class="add-btn" onclick="addCity()">+</button>
         </div>
 
