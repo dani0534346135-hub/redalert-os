@@ -1,15 +1,24 @@
 {
   "name": "RedAlert OS Ultimate",
-  "short_name": "RedAlert",
-  "start_url": "/",
+  "short_name": "RedAlert OS",
+  "description": "מערכת ניטור ובקרה מתקדמת - דניאל כרייף",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#050505",
   "theme_color": "#ff3b30",
+  "orientation": "portrait",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/564/564619.png",
+      "src": "./icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
