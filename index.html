@@ -3,130 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RedAlert OS | דניאל כרייף</title>
+    <title>RedAlert OS | בדיקת נתוני אמת</title>
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;700&family=Orbitron:wght@600&display=swap" rel="stylesheet">
     <style>
         :root { --red: #ff3b30; --green: #34c759; --bg: #000; --card: #1c1c1e; }
         body { margin: 0; background: var(--bg); color: white; font-family: 'Assistant', sans-serif; }
-        .page { display: none; padding: 20px; }
-        .active { display: block; }
-        
-        /* הממשק המהמם */
-        .guidelines-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 20px 0; }
-        .guide-box { background: var(--card); padding: 15px 5px; border-radius: 12px; text-align: center; border: 1px solid #333; }
-        .guide-box b { display: block; font-size: 11px; opacity: 0.6; margin-bottom: 5px; }
-        .guide-box span { font-size: 13px; font-weight: bold; color: var(--green); }
-
-        .orb { width: 180px; height: 180px; border-radius: 50%; border: 4px solid var(--green); margin: 20px auto; display: flex; align-items: center; justify-content: center; font-family: 'Orbitron'; font-size: 24px; }
-        
-        .history-feed { background: var(--card); border-radius: 15px; padding: 15px; max-height: 250px; overflow-y: auto; border: 1px solid #333; }
-        .feed-item { padding: 10px 0; border-bottom: 1px solid #333; display: flex; justify-content: space-between; font-size: 14px; }
-
-        .search-area { background: var(--card); border-radius: 12px; display: flex; padding: 5px 15px; margin: 20px 0; border: 1px solid #444; }
-        input { flex: 1; background: transparent; border: none; color: white; padding: 12px; outline: none; }
-        .add-btn { color: var(--green); font-size: 28px; background: none; border: none; cursor: pointer; }
-        
-        .city-tag { background: var(--card); padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; cursor: pointer; border: 1px solid #333; }
+        .page { padding: 20px; }
+        .orb { width: 150px; height: 150px; border-radius: 50%; border: 4px solid var(--green); margin: 20px auto; display: flex; align-items: center; justify-content: center; font-family: 'Orbitron'; font-size: 22px; transition: 0.3s; }
+        .orb.alert { border-color: var(--red); box-shadow: 0 0 20px var(--red); color: var(--red); }
+        .history-feed { background: var(--card); border-radius: 15px; padding: 15px; max-height: 350px; overflow-y: auto; border: 1px solid #333; }
+        .feed-item { padding: 12px 0; border-bottom: 1px solid #333; display: flex; justify-content: space-between; font-size: 15px; }
+        .status-badge { text-align: center; padding: 5px; font-size: 12px; opacity: 0.6; }
     </style>
 </head>
 <body>
 
-    <div id="mainPage" class="page active">
-        <h2 style="font-family:'Orbitron'; color:var(--red); text-align:center;">REDALERT OS</h2>
-        <div class="orb" id="mainOrb">שגרה</div>
+    <div class="page">
+        <h2 style="font-family:'Orbitron'; color:var(--red); text-align:center;">REDALERT OS | LIVE</h2>
+        <div id="statusOrb" class="orb">בדיקה...</div>
+        <div id="connectionStatus" class="status-badge">מנסה להתחבר לשרת...</div>
 
-        <div class="search-area">
-            <input type="text" id="cityInput" placeholder="הקלד שם עיר (למשל: בת ים)">
-            <button class="add-btn" onclick="addCity()">+</button>
-        </div>
-
-        <div id="myCitiesList"></div>
-
-        <h3 style="opacity:0.7;">התרעות אמת (ארצי):</h3>
-        <div id="globalFeed" class="history-feed">מתחבר לנתוני אמת...</div>
-    </div>
-
-    <div id="cityPage" class="page">
-        <div onclick="showPage('mainPage')" style="color:var(--green); cursor:pointer;">⬅️ חזרה</div>
-        <h1 id="cityNameTitle"></h1>
+        <h3 style="margin-top:30px;">היסטוריית אזעקות בזמן אמת:</h3>
+        <div id="globalFeed" class="history-feed">טוען נתונים מהמקור...</div>
         
-        <div class="guidelines-grid">
-            <div class="guide-box"><b>🎓 לימודים</b><span>ללא מגבלה</span></div>
-            <div class="guide-box"><b>💼 עבודה</b><span>כסדרה</span></div>
-            <div class="guide-box"><b>👥 התקהלות</b><span>עד 1,000</span></div>
-        </div>
-
-        <h3>היסטוריית אמת ביישוב:</h3>
-        <div id="cityHistoryFeed" class="history-feed"></div>
+        <p style="text-align:center; opacity:0.3; font-size:11px; margin-top:50px;">מפתח: דניאל כרייף | breslev6135@gmail.com</p>
     </div>
 
 <script>
-    // פתרון שגיאת audioCtx - מגדירים רק פעם אחת!
-    let myAudioCtx = null;
-    let myCities = JSON.parse(localStorage.getItem('dan_cities')) || [];
+    async function checkRealTimeData() {
+        const feed = document.getElementById('globalFeed');
+        const orb = document.getElementById('statusOrb');
+        const status = document.getElementById('connectionStatus');
 
-    async function fetchOrefData() {
         try {
-            // שימוש ב-Proxy כדי לעקוף את חסימת ה-CORS שראית בתמונות
-            const response = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://www.oref.org.il/WarningMessages/History/AlertsHistory.json') + '&t=' + Date.now());
-            const json = await response.json();
-            const data = JSON.parse(json.contents);
+            // שימוש ב-Proxy שעובד מעולה ברשת פתוחה
+            const url = 'https://corsproxy.io/?' + encodeURIComponent('https://www.oref.org.il/WarningMessages/History/AlertsHistory.json');
+            const response = await fetch(url + '&t=' + Date.now());
+            
+            if (!response.ok) throw new Error('Network error');
+            
+            const data = await response.json();
             
             if (data && data.length > 0) {
-                // עדכון הרשימה הכללית
-                document.getElementById('globalFeed').innerHTML = data.slice(0, 20).map(a => `
-                    <div class="feed-item"><span>${a.alertDate.split(' ')[1]}</span><b>${a.data}</b></div>
-                `).join('');
+                status.innerText = "מחובר לנתוני אמת - עודכן ב: " + new Date().toLocaleTimeString();
+                status.style.color = "var(--green)";
+                orb.innerText = "מחובר";
+                orb.classList.remove('alert');
 
-                // שמירת נתונים לערים שלי
-                myCities.forEach(city => {
-                    city.alerts = data.filter(a => a.data.includes(city.name));
-                });
-                renderCities();
+                feed.innerHTML = data.slice(0, 20).map(a => `
+                    <div class="feed-item">
+                        <span>${a.alertDate.split(' ')[1]}</span>
+                        <b>${a.data}</b>
+                    </div>
+                `).join('');
+            } else {
+                feed.innerHTML = "אין התראות ב-24 השעות האחרונות.";
             }
         } catch (e) {
-            document.getElementById('globalFeed').innerHTML = "מנסה להתחבר מחדש...";
+            console.error(e);
+            status.innerText = "שגיאת חיבור. וודא שאתה ברשת פתוחה.";
+            status.style.color = "var(--red)";
+            orb.innerText = "שגיאה";
         }
     }
 
-    function addCity() {
-        const name = document.getElementById('cityInput').value.trim();
-        if(name && !myCities.find(c => c.name === name)) {
-            myCities.push({name: name, alerts: []});
-            localStorage.setItem('dan_cities', JSON.stringify(myCities));
-            renderCities();
-            fetchOrefData();
-        }
-        document.getElementById('cityInput').value = "";
-    }
-
-    function renderCities() {
-        document.getElementById('myCitiesList').innerHTML = myCities.map(c => `
-            <div class="city-tag" onclick="openCity('${c.name}')">
-                <span>${c.name}</span>
-                <b style="color:var(--red)">${c.alerts.length} אזעקות</b>
-            </div>
-        `).join('');
-    }
-
-    function openCity(name) {
-        const city = myCities.find(c => c.name === name);
-        document.getElementById('cityNameTitle').innerText = name;
-        document.getElementById('cityHistoryFeed').innerHTML = city.alerts.map(a => `
-            <div class="feed-item"><span>${a.alertDate}</span><b>${a.title}</b></div>
-        `).join('') || "אין היסטוריה ל-24 השעות האחרונות";
-        showPage('cityPage');
-    }
-
-    function showPage(id) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
-    }
-
-    // הפעלה ראשונית
-    setInterval(fetchOrefData, 5000);
-    fetchOrefData();
-    renderCities();
+    // רענון מהיר כל 5 שניות לבדיקה
+    setInterval(checkRealTimeData, 5000);
+    checkRealTimeData();
 </script>
 </body>
 </html>
